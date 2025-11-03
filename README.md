@@ -1,1 +1,1 @@
-# AMID-Bookmarklet (Am I Debaared/Dead?)
+# AMID-Bookmarklet (Am I Debarred/Dead?)
