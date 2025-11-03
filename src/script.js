@@ -33,7 +33,9 @@ function getStudentDetailsFromPage() {
         BranchId: getElementValueById('hdnBranchId'),
         StudentAdmissionId: getElementValueById('hdnStudentAdmissionId'),
         DateOfBirth: getElementValueById('DateOfBirth'),
-        RollNo: getElementValueById('RollNo')
+        RollNo: getElementValueById('RollNo'),
+        CourseBatchDurationId: getElementValueById('CourseBranchDurationId'),
+        SessionYear: getElementValueById('SessionYear')
     };
 }
 
