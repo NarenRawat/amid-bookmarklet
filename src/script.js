@@ -56,7 +56,7 @@ function main() {
         const hasStudentDetailsOnPage = getElementValueById('hdnCollegeId');
 
         if (!hasStudentDetailsOnPage) {
-            alert('Setup required:\n\nPlease view your attendance manually once, then run the bookmarklet again to finish configuration.');
+            alert('Setup required:\n\nPlease view your current semester attendance manually once, then run the bookmarklet again to finish configuration.');
             return;
         }
 
