@@ -1,3 +1,11 @@
+function isStudentDetailsComplete(details) {
+    return (
+        !!details &&
+        typeof details === "object" &&
+        Object.values(details).every(Boolean)
+    );
+}
+
 function isBookmarkletConfigured() {
     const data = localStorage.getItem('student_details');
 
@@ -7,7 +15,7 @@ function isBookmarkletConfigured() {
 
     try {
         const studentDetails = JSON.parse(data);
-        return Object.values(studentDetails).every(Boolean);
+        return isStudentDetailsComplete(studentDetails);
     } catch {
         return false;
     }
@@ -31,17 +39,28 @@ function getStudentDetailsFromPage() {
 
 function configureBookmarklet() {
     const studentDetails = getStudentDetailsFromPage();
+
+    if (!isStudentDetailsComplete(studentDetails)) {
+        return false;
+    }
+
     localStorage.setItem("student_details", JSON.stringify(studentDetails));
+
+    return isBookmarkletConfigured();
 }
 
 function main() {
     if (!isBookmarkletConfigured()) {
         const hasStudentDetailsOnPage = getElementValueById('hdnCollegeId');
 
-        if (hasStudentDetailsOnPage) {
-            configureBookmarklet();
-        } else {
+        if (!hasStudentDetailsOnPage) {
             alert('Setup required:\n\nPlease view your attendance manually once, then run the bookmarklet again to finish configuration.');
+            return;
+        }
+
+        const configured = configureBookmarklet();
+        if (!configured) {
+            alert('Configuration failed:\n\nCould not save student details. Please try again after viewing attendance.');
             return;
         }
     }
