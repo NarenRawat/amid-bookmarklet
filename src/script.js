@@ -1,17 +1,38 @@
-function injectHTML() {
-    const HTMLContent = `
+{
+    const $ = id => document.getElementById(id);
+
+    ///////////////////////////////////////////
+
+    const STORAGE_KEYS = {
+        STUDENT: "studentDetails",
+        ATTENDANCE: "attendanceRecord"
+    }
+
+    function loadStorage(key) {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+    }
+
+    function saveStorage(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    ///////////////////////////////////////////
+
+    function injectHTML() {
+        const HTMLContent = `
     <hr>
     `;
 
-    const element = document.createElement("div");
-    element.id = "amid-container";
-    element.className = "row";
-    element.innerHTML = HTMLContent;
-    document.getElementById("PrintDiv").before(element);
-}
+        const element = document.createElement("div");
+        element.id = "amid-container";
+        element.className = "row";
+        element.innerHTML = HTMLContent;
+        document.getElementById("PrintDiv").before(element);
+    }
 
-function injectCSS() {
-    const CSSContent = `
+    function injectCSS() {
+        const CSSContent = `
     #amid-container {
         display: flex;
         align-items: center;
@@ -20,200 +41,207 @@ function injectCSS() {
     }
     `;
 
-    const style = document.createElement("style");
-    style.id = "amid-style"
-    style.innerText = CSSContent;
-    document.head.appendChild(style);
-}
-
-function isStudentDetailsComplete(details) {
-    return (
-        !!details &&
-        typeof details === "object" &&
-        Object.values(details).every(Boolean)
-    );
-}
-
-function isBookmarkletConfigured() {
-    const data = localStorage.getItem('student_details');
-
-    if (!data) {
-        return false;
+        const style = document.createElement("style");
+        style.id = "amid-style"
+        style.innerText = CSSContent;
+        document.head.appendChild(style);
     }
 
-    try {
-        const studentDetails = JSON.parse(data);
-        return isStudentDetailsComplete(studentDetails);
-    } catch {
-        return false;
-    }
-}
-
-function getElementValueById(id) {
-    const element = document.getElementById(id)
-    return element?.value ?? null;
-}
-
-function getStudentDetailsFromPage() {
-    return {
-        CollegeId: getElementValueById('hdnCollegeId'),
-        CourseId: getElementValueById('hdnCourseId'),
-        BranchId: getElementValueById('hdnBranchId'),
-        StudentAdmissionId: getElementValueById('hdnStudentAdmissionId'),
-        DateOfBirth: getElementValueById('DateOfBirth'),
-        RollNo: getElementValueById('RollNo'),
-        CourseBranchDurationId: getElementValueById('CourseBranchDurationId'),
-        SessionYear: getElementValueById('SessionYear')
-    };
-}
-
-function configureBookmarklet() {
-    const studentDetails = getStudentDetailsFromPage();
-
-    if (!isStudentDetailsComplete(studentDetails)) {
-        return false;
+    function cleanup() {
+        $('amid-container')?.remove();
+        $('amid-style')?.remove();
     }
 
-    localStorage.setItem("student_details", JSON.stringify(studentDetails));
+    ///////////////////////////////////////////
 
-    return isBookmarkletConfigured();
-}
 
-function cleanup() {
-    const container = document.getElementById("amid-container");
-    if (container) {
-        container.remove();
-    }
 
-    const style = document.getElementById("amid-style");
-    if (style) {
-        style.remove();
-    }
-}
-// const baseUrl = "https://online.uktech.ac.in/ums/Student/Public/ShowStudentAttendanceListByRollNoDOB";
+    function showAttendanceReport() {
+        let held = 0;
+        let attended = 0;
 
-// const url = new URL(baseUrl);
-// url.search = new URLSearchParams(params).toString();
+        const data = loadStorage(STORAGE_KEYS.ATTENDANCE);
 
-// async function get_attendance() {
-//     const response = await fetch(url);
-//     const data = await response.json();
-
-//     console.log(data);
-//     document.querySelector("body").innerHTML = data;
-// }
-
-// get_attendance();
-
-function parseTable(html) {
-    const data = {};
-    const div = document.createElement("div");
-    div.innerHTML = html;
-    const table = div.querySelector("tbody");
-    const rows = table.rows;
-    for (let row of rows) {
-        const cells = row.cells;
-        const subject = cells[0].innerText;
-        data[subject] = {
-            held: Number(cells[cells.length - 3].innerText),
-            attended: Number(cells[cells.length - 2].innerText)
+        for (let m in data) {
+            for (let s in data[m]) {
+                held += data[m][s].held;
+                attended += data[m][s].attended;
+            }
         }
+
+        const el = document.createElement("h1");
+        el.innerText = "Overall attendance: " + String(attended / held * 100);
+        document.getElementById("amid-container").appendChild(el);
     }
-    return data;
-}
 
-async function fetchAttendance(url) {
-    const response = await fetch(url);
-    const data = await response.json();
+    function parseAttendanceTable(html) {
+        const div = document.createElement("div");
+        div.innerHTML = html;
 
-    return parseTable(data);
-}
+        const rows = Array.from(div.querySelectorAll("tbody tr"));
 
-async function getMonthAttendance(month, year) {
-    const studentDetails = JSON.parse(localStorage.getItem("student_details"));
-    studentDetails.Year = year;
-    studentDetails.MonthId = month;
-
-    const baseUrl = "https://online.uktech.ac.in/ums/Student/Public/ShowStudentAttendanceListByRollNoDOB";
-    const url = new URL(baseUrl);
-    url.search = new URLSearchParams(studentDetails).toString();
-
-    const response = await fetchAttendance(url);
-    return response;
-}
-
-async function syncAttendanceData() {
-    const studentDetails = JSON.parse(localStorage.getItem("student_details"));
-    const semester = Number(studentDetails.CourseBranchDurationId);
-    const isOddSem = !!(semester % 2);
-
-    let attendanceData = localStorage.getItem("attendance_data");
-    if (!attendanceData) {
-        localStorage.setItem("attendance_data", JSON.stringify({}));
-        attendanceData = localStorage.getItem("attendance_data");
+        return Object.fromEntries(
+            rows.map(
+                row => {
+                    const cells = row.cells;
+                    const subject = cells[0].innerHTML.trim();
+                    const held = Number(cells[cells.length - 3].innerText);
+                    const attended = Number(cells[cells.length - 2].innerText);
+                    return [
+                        subject,
+                        {
+                            held: held,
+                            attended: attended
+                        }
+                    ]
+                }
+            )
+        )
     }
-    attendanceData = JSON.parse(attendanceData);
 
-    const startMonth = isOddSem ? 7 : 1;
-    const currentFullDate = new Date(Date.now());
-    const currentMonth = currentFullDate.getMonth() + 1;
+    async function fetchAttendanceData(params) {
+        const baseUrl = "https://online.uktech.ac.in/ums/Student/Public/ShowStudentAttendanceListByRollNoDOB";
+        const url = new URL(baseUrl);
+        url.search = new URLSearchParams(params).toString();
 
-    if (startMonth <= currentMonth) {
-        for (let i = startMonth; i < currentMonth; i++) {
-            const monthAttendance = attendanceData[i];
-            if (!monthAttendance) {
-                attendanceData[i] = await getMonthAttendance(i, currentFullDate.getFullYear());
+        const response = await fetch(url);
+        return await response.json();
+    }
+
+    async function getMonthAttendance(month, year) {
+        const studentDetails = loadStorage(STORAGE_KEYS.STUDENT);
+        const response = await fetchAttendanceData({
+            ...studentDetails,
+            Year: year,
+            MonthId: month
+        });
+
+        return parseAttendanceTable(response);
+    }
+
+
+    async function populateMonthRangeAttendance(data, startMonth, endMonth, year) {
+        for (let m = startMonth; m <= endMonth; m++) {
+            if (!(m in data)) {
+                data[m] = await getMonthAttendance(m, year);
             }
         }
     }
 
-    attendanceData[currentMonth] = await getMonthAttendance(currentMonth, currentFullDate.getFullYear());
-    localStorage.setItem("attendance_data", JSON.stringify(attendanceData));
-}
+    async function getCurrentSemesterAttendance(semester) {
+        const isOddSem = semester % 2 !== 0;
+        const startMonth = isOddSem ? 7 : 1;
 
-function showAttendanceReport() {
-    let held = 0;
-    let attended = 0;
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
 
-    const data = JSON.parse(localStorage.getItem("attendance_data"));
+        const data = loadStorage(STORAGE_KEYS.ATTENDANCE) ?? {};
 
-    for (let m in data) {
-        for (let s in data[m]) {
-            held += Number(data[m][s].held);
-            attended += Number(data[m][s].attended);
+        if (startMonth < currentMonth) {
+            await populateMonthRangeAttendance(data, startMonth, currentMonth - 1, currentYear);
+        } else if (startMonth > currentMonth) {
+            await populateMonthRangeAttendance(data, startMonth, 12, currentYear - 1)
+            await populateMonthRangeAttendance(data, 1, currentMonth - 1, currentYear);
         }
+
+        const yearForCurrentMonth = startMonth > currentMonth ? currentYear + 1 : currentYear;
+        data[currentMonth] = await getMonthAttendance(currentMonth, yearForCurrentMonth);
+
+        return data;
     }
 
-    const el = document.createElement("h1");
-    el.innerText = "Overall attendance: " + String(attended / held * 100);
-    document.getElementById("amid-container").appendChild(el);
-}
+    async function syncAttendanceData() {
+        const studentDetails = loadStorage(STORAGE_KEYS.STUDENT);
+        const semester = +studentDetails.CourseBranchDurationId;
+        const updatedData = await getCurrentSemesterAttendance(semester);
+        saveStorage(STORAGE_KEYS.ATTENDANCE, updatedData);
+    }
 
-async function main() {
-    cleanup();
-    if (!isBookmarkletConfigured()) {
-        const hasStudentDetailsOnPage = getElementValueById('hdnCollegeId');
+    ///////////////////////////////////////////
+
+    function isStudentDetailsComplete(details) {
+        return (
+            !!details &&
+            typeof details === "object" &&
+            Object.values(details).every(Boolean)
+        );
+    }
+
+    function isBookmarkletConfigured() {
+        const data = loadStorage(STORAGE_KEYS.STUDENT);
+        return isStudentDetailsComplete(data);
+    }
+
+    function getStudentDetailsFromPage() {
+        const ids = [
+            'hdnCollegeId',
+            'hdnCourseId',
+            'hdnBranchId',
+            'hdnStudentAdmissionId',
+            'DateOfBirth',
+            'RollNo',
+            'CourseBranchDurationId',
+            'SessionYear'
+        ];
+
+        return Object.fromEntries(
+            ids.map(
+                id => [
+                    id.replace(/^hdn/, ''),
+                    $(id)?.value ?? null
+                ]
+            )
+        );
+
+    }
+
+    function configureStudentDetails() {
+        const studentDetails = getStudentDetailsFromPage();
+
+        if (!isStudentDetailsComplete(studentDetails)) {
+            return false;
+        }
+
+        saveStorage(STORAGE_KEYS.STUDENT, studentDetails);
+        return true;
+    }
+
+    function configureBookmarklet() {
+
+        // The page has student details if this element is available
+        const hasStudentDetailsOnPage = $('hdnCollegeId')
 
         if (!hasStudentDetailsOnPage) {
             alert('Setup required:\n\nPlease view your current semester attendance manually once, then run the bookmarklet again to finish configuration.');
-            return;
+            return false;
         }
 
-        const configured = configureBookmarklet();
-        if (!configured) {
+        if (!configureStudentDetails()) {
             alert('Configuration failed:\n\nCould not save student details. Please try again after viewing attendance.');
-            return;
+            return false;
         }
+
+        return true;
     }
 
-    // document.getElementById("PrintDiv").hidden = true;
-    await syncAttendanceData();
+    ///////////////////////////////////////////
 
-    injectHTML();
-    injectCSS();
+    async function main() {
+        cleanup();
 
+        if (!isBookmarkletConfigured()) {
+            const success = configureBookmarklet();
+            if (!success) return;
+        }
 
-    showAttendanceReport();
+        await syncAttendanceData();
+
+        injectHTML();
+        injectCSS();
+
+        showAttendanceReport();
+    }
+
+    main();
 }
-
-main();
