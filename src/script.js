@@ -1,6 +1,40 @@
 {
     const $ = id => document.getElementById(id);
 
+    const circularProgressBarHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100 100">
+            <circle class="progress" cx="50" cy="50" r="40" stroke-linecap="round" />
+            <circle class="track" cx="50" cy="50" r="40" stroke-linecap="round" />
+        </svg>
+        <div class="text">0%</div>
+    `
+
+    function createCircularProgressBar() {
+        const container = document.createElement("div");
+        container.classList.add("circularProgressBar");
+        container.innerHTML = circularProgressBarHTML;
+
+        const progress = container.getElementsByClassName("progress")[0];
+
+        const r = progress.r.baseVal.value;
+        const circumference = 2 * Math.PI * r;
+
+        progress.style.strokeDasharray = circumference;
+        progress.style.strokeDashoffset = circumference;
+
+        return container;
+    }
+
+    function updateCircularProgressBar(progressBarContainer, percent) {
+        const progress = progressBarContainer.getElementsByClassName("progress")[0];
+        const r = progress.r.baseVal.value;
+        const circumference = 2 * Math.PI * r;
+
+        progress.style.strokeDashoffset = circumference * (1 - percent / 100);
+
+        const text = progressBarContainer.getElementsByClassName("text")[0];
+        text.innerText = percent + "%";
+    }
     ///////////////////////////////////////////
 
     const STORAGE_KEYS = {
@@ -21,25 +55,76 @@
 
     function injectHTML() {
         const HTMLContent = `
-    <hr>
-    `;
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0" height="0">
+            <defs>
+                <linearGradient id="gradient">
+                    <stop offset="0%" stop-color="#DA22FF" />
+                    <stop offset="100%" stop-color="#9733EE" />
+                </linearGradient>
+            </defs>
+        </svg>
+        `;
 
-        const element = document.createElement("div");
-        element.id = "amid-container";
-        element.className = "row";
-        element.innerHTML = HTMLContent;
-        document.getElementById("PrintDiv").before(element);
+        const container = document.createElement("div");
+        container.id = "amid-container";
+        container.innerHTML = HTMLContent;
+
+        const overallProgressBar = createCircularProgressBar();
+        overallProgressBar.id = "overallAttendanceProgressBar"
+        container.appendChild(overallProgressBar);
+
+        document.getElementById("PrintDiv").before(container);
     }
 
     function injectCSS() {
         const CSSContent = `
-    #amid-container {
-        display: flex;
-        align-items: center;
-        justify-contents: center;
-        min-height: 200px;
-    }
-    `;
+        #amid-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            margin: 5%;
+            padding: 2%;
+        }
+
+        .circularProgressBar {
+            width: 300px;
+            aspect-ratio: 1;
+            position: relative;
+        }
+
+        .circularProgressBar .text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .circularProgressBar svg {
+            width: 100%;
+            height: 100%;
+
+            transform: rotate(-90deg);
+        }
+
+        .circularProgressBar .progress {
+            fill: none;
+            stroke: url("#gradient");
+            stroke-width: 10;
+
+            transition: stroke-dashoffset 400ms cubic-bezier(.22, .9, .37, 1);
+        }
+
+        .circularProgressBar .track {
+            fill: none;
+            stroke: #00000033;
+            stroke-width: 10;
+        }
+        `;
 
         const style = document.createElement("style");
         style.id = "amid-style"
@@ -54,24 +139,26 @@
 
     ///////////////////////////////////////////
 
+    function getOverallAttendancePercent() {
+        const attendance = loadStorage(STORAGE_KEYS.ATTENDANCE);
 
-
-    function showAttendanceReport() {
         let held = 0;
         let attended = 0;
 
-        const data = loadStorage(STORAGE_KEYS.ATTENDANCE);
-
-        for (let m in data) {
-            for (let s in data[m]) {
-                held += data[m][s].held;
-                attended += data[m][s].attended;
+        for (const m in attendance) {
+            const monthAttendance = attendance[m];
+            for (const subject in monthAttendance) {
+                held += monthAttendance[subject].held;
+                attended += monthAttendance[subject].attended;
             }
         }
 
-        const el = document.createElement("h1");
-        el.innerText = "Overall attendance: " + String(attended / held * 100);
-        document.getElementById("amid-container").appendChild(el);
+        return held ? Math.floor(attended / held * 100) : 0;
+    }
+
+    function showAttendanceReport() {
+        const overallPercent = getOverallAttendancePercent();
+        updateCircularProgressBar($("overallAttendanceProgressBar"), overallPercent);
     }
 
     function parseAttendanceTable(html) {
@@ -235,10 +322,10 @@
             if (!success) return;
         }
 
-        await syncAttendanceData();
-
         injectHTML();
         injectCSS();
+
+        await syncAttendanceData();
 
         showAttendanceReport();
     }
