@@ -225,7 +225,7 @@
             padding: 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: clamp(12px, 2.5vw, 1rem);
             font-weight: bold;
             background-color: #8CBDF2;
             color: #0a2e52;
@@ -257,10 +257,12 @@
             padding: 10px;
             flex-wrap: wrap;
             align-content: center;
+
+            font-size: clamp(12px, 2.5vw, 1rem);
         }
 
         .linearProgressBar .track {
-            height: 20px;
+            height: clamp(12px, 2.5vw, 20px);
             background-color: #00000033;
             border-radius: 100vmax;
             overflow: hidden;
@@ -282,14 +284,14 @@
             line-height: 1;
             margin-left: 10px;
 
-            font-size: 1.2rem;
+            font-size: 1em;
         }
 
         .linearProgressBar .progressText {
             line-height: 1;
             margin-right: 10px;
 
-            font-size: 1.1rem;
+            font-size: 1em;
         }
 
         @media screen and (max-width: 600px) {
