@@ -76,6 +76,7 @@
                 </linearGradient>
             </defs>
         </svg>
+        <div class="heading">Semester Attendance Report</heading>
         `;
 
         const container = document.createElement("div");
@@ -85,7 +86,6 @@
 
         const overallAttendanceProgressBar = createCircularProgressBar("Overall");
         overallAttendanceProgressBar.id = "overallAttendanceProgressBar"
-
         container.appendChild(overallAttendanceProgressBar);
 
         document.getElementById("PrintDiv").before(container);
@@ -97,7 +97,15 @@
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
             border-radius: 20px;
             margin: 5%;
-            padding: 2%;
+            padding: 1%;
+            flex-wrap: wrap;
+        }
+
+        .heading {
+            flex: 100%;
+            text-align: center;
+            font-size: 3rem;
+            font-weight: bold;
         }
 
         .flexCenter {
