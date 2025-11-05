@@ -6,15 +6,20 @@
             <circle class="progress" cx="50" cy="50" r="40" stroke-linecap="round" />
             <circle class="track" cx="50" cy="50" r="40" stroke-linecap="round" />
         </svg>
-        <div class="text">0%</div>
+        <div class="text">
+            <div class="primary">0%</div>
+            <div class="secondary"></div>
+        </div>
     `
 
-    function createCircularProgressBar() {
+    function createCircularProgressBar(secondaryText="") {
         const container = document.createElement("div");
         container.classList.add("circularProgressBar");
         container.innerHTML = circularProgressBarHTML;
 
         const progress = container.getElementsByClassName("progress")[0];
+        const secondaryTextDiv = container.getElementsByClassName("secondary")[0];
+        secondaryTextDiv.innerText = secondaryText;
 
         const r = progress.r.baseVal.value;
         const circumference = 2 * Math.PI * r;
@@ -32,7 +37,15 @@
 
         progress.style.strokeDashoffset = circumference * (1 - percent / 100);
 
-        const text = progressBarContainer.getElementsByClassName("text")[0];
+        if (percent < 75) {
+            progress.style.stroke = "#ec5840";
+        } else if (percent <80) {
+            progress.style.stroke = "#ffae00";
+        } else {
+            progress.style.stroke = "#3adb76"
+        }
+
+        const text = progressBarContainer.getElementsByClassName("primary")[0];
         text.innerText = percent + "%";
     }
     ///////////////////////////////////////////
@@ -63,9 +76,6 @@
                 </linearGradient>
             </defs>
         </svg>
-        <div class="flexCenter" id="overallAttendance">
-            <div id="overallAttendanceLabel">Overall</div>
-        </div>
         `;
 
         const container = document.createElement("div");
@@ -73,12 +83,10 @@
         container.innerHTML = HTMLContent;
         container.classList.add("flexCenter");
 
-        const overallAttendanceDiv = container.querySelector("#overallAttendance");
-        const overallAttendanceProgressBar = createCircularProgressBar();
+        const overallAttendanceProgressBar = createCircularProgressBar("Overall");
         overallAttendanceProgressBar.id = "overallAttendanceProgressBar"
-        overallAttendanceDiv.insertAdjacentElement("afterbegin", overallAttendanceProgressBar);
 
-        container.appendChild(overallAttendanceDiv);
+        container.appendChild(overallAttendanceProgressBar);
 
         document.getElementById("PrintDiv").before(container);
     }
@@ -109,10 +117,24 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+
+        .circularProgressBar .text .primary {
+            text-align: center;
             font-size: 3rem;
             font-weight: bold;
+            line-height: 1;
+            margin-bottom: 5px;
         }
-        
+
+        .circularProgressBar .text .secondary {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            opacity: 0.7;
+            line-height: 1;
+        }
+
         .circularProgressBar svg {
             width: 100%;
             height: 100%;
@@ -126,22 +148,11 @@
         }
 
         .circularProgressBar .progress {
-            stroke: url("#gradient");
             transition: stroke-dashoffset 400ms cubic-bezier(.22, .9, .37, 1);
         }
 
         .circularProgressBar .track {
             stroke: #00000033;
-        }
-
-        #overallAttendance {
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        #overallAttendanceLabel {
-            font-size: 1.5rem;
-            font-weight: bold;
         }
         `;
 
