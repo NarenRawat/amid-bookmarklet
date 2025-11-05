@@ -76,7 +76,7 @@
                 </linearGradient>
             </defs>
         </svg>
-        <div class="heading">Semester Attendance Report</heading>
+        <div class="heading">Semester Attendance Report</div>
         `;
 
         const container = document.createElement("div");
@@ -104,7 +104,7 @@
         .heading {
             flex: 100%;
             text-align: center;
-            font-size: 3rem;
+            font-size: clamp(32px, 4vw, 3rem);
             font-weight: bold;
         }
 
@@ -125,11 +125,12 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            font-size: clamp(32px, 4vw, 3rem);
         }
 
         .circularProgressBar .text .primary {
             text-align: center;
-            font-size: 3rem;
+            font-size: 1em;
             font-weight: bold;
             line-height: 1;
             margin-bottom: 5px;
@@ -137,7 +138,7 @@
 
         .circularProgressBar .text .secondary {
             text-align: center;
-            font-size: 2rem;
+            font-size: 0.7em;
             font-weight: bold;
             opacity: 0.7;
             line-height: 1;
@@ -161,6 +162,14 @@
 
         .circularProgressBar .track {
             stroke: #00000033;
+        }
+
+        @media screen and (max-width: 600px) {
+            .circularProgressBar {
+                aspect-ratio: 1;
+                position: relative;
+                flex: 0 0 100%;
+            }
         }
         `;
 
