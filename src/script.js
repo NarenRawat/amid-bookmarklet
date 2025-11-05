@@ -68,15 +68,8 @@
 
     function injectHTML() {
         const HTMLContent = `
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0" height="0">
-            <defs>
-                <linearGradient id="gradient">
-                    <stop offset="0%" stop-color="#DA22FF" />
-                    <stop offset="100%" stop-color="#9733EE" />
-                </linearGradient>
-            </defs>
-        </svg>
         <div class="heading">Semester Attendance Report</div>
+        <div class="subject"></div>
         `;
 
         const container = document.createElement("div");
