@@ -1,10 +1,48 @@
 {
     const $ = id => document.getElementById(id);
 
+    const linearProgressBarHTML = `
+    <div class="primaryText"></div>
+    <div class="progressText">0%</div>
+    <div class="track">
+        <div class="progress"></div>
+    <div>
+    `
+
+    function createLinearProgressBar(label = "") {
+        const container = document.createElement("div");
+        container.classList.add("linearProgressBar");
+        container.classList.add("flexCenter");
+        container.innerHTML = linearProgressBarHTML;
+
+        const primaryText = container.getElementsByClassName("primaryText")[0];
+        primaryText.innerHTML = label;
+
+        return container;
+    }
+
+    function updateLinearProgressBar(progressBarContainer, percent) {
+        const progress = progressBarContainer.getElementsByClassName("progress")[0];
+        progress.style.transform = `translateX(-${100 - percent}%)`;
+
+        if (percent < 75) {
+            progress.style.backgroundColor = "#ec5840";
+        } else if (percent < 80) {
+            progress.style.backgroundColor = "#ffae00";
+        } else {
+            progress.style.backgroundColor = "#3adb76"
+        }
+
+        const progressTextDiv = progressBarContainer.getElementsByClassName("progressText")[0];
+        progressTextDiv.innerText = percent + "%";
+    }
+
+    ///////////////////////////////////////////
+
     const circularProgressBarHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100 100">
-            <circle class="progress" cx="50" cy="50" r="40" stroke-linecap="round" />
             <circle class="track" cx="50" cy="50" r="40" stroke-linecap="round" />
+            <circle class="progress" cx="50" cy="50" r="40" stroke-linecap="round" />
         </svg>
         <div class="text">
             <div class="primary">0%</div>
@@ -12,7 +50,7 @@
         </div>
     `
 
-    function createCircularProgressBar(secondaryText="") {
+    function createCircularProgressBar(secondaryText = "") {
         const container = document.createElement("div");
         container.classList.add("circularProgressBar");
         container.innerHTML = circularProgressBarHTML;
@@ -39,7 +77,7 @@
 
         if (percent < 75) {
             progress.style.stroke = "#ec5840";
-        } else if (percent <80) {
+        } else if (percent < 80) {
             progress.style.stroke = "#ffae00";
         } else {
             progress.style.stroke = "#3adb76"
@@ -69,7 +107,9 @@
     function injectHTML() {
         const HTMLContent = `
         <div class="heading">Semester Attendance Report</div>
-        <div class="subjectReport"></div>
+        <div id="subjectReport">
+        <div class="heading">Subject-Wise Breakdown</div>
+        </div>
         <div class="actionButtons flexCenter">
             <div id="clearCacheBtn" class="textButton flexCenter">Clear Cache</div>
             <div id="resetBtn" class="textButton flexCenter">Reset Bookmarklet</div>
@@ -106,7 +146,7 @@
             margin: 5%;
             padding: 20px;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 50px;
         }
 
         .heading {
@@ -125,7 +165,7 @@
         .circularProgressBar {
             aspect-ratio: 1;
             position: relative;
-            flex: 0 0 300px;
+            flex: 0 0 450px;
         }
 
         .circularProgressBar .text {
@@ -165,7 +205,8 @@
         }
 
         .circularProgressBar .progress {
-            transition: stroke-dashoffset 400ms cubic-bezier(.22, .9, .37, 1);
+            transition: .4s ease-out;
+            stroke: #ec5840;
         }
 
         .circularProgressBar .track {
@@ -197,6 +238,58 @@
         .textButton:active {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transform: translateY(1px);
+        }
+
+        #subjectReport {
+            align-self: stretch;
+            flex: 1 1 500px;
+        }
+
+        #subjectReport .heading {
+            font-size: clamp(24px, 2vw, 2rem);
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .linearProgressBar {
+            width: 100%;
+            gap: 5px 20px;
+            padding: 10px;
+            flex-wrap: wrap;
+            align-content: center;
+        }
+
+        .linearProgressBar .track {
+            height: 20px;
+            background-color: #00000033;
+            border-radius: 100vmax;
+            overflow: hidden;
+            flex: 100%;
+        }
+
+        .linearProgressBar .progress {
+            height: 100%;
+            width: 100%;
+            border-radius: 100vmax;
+            transform: translateX(-100%);
+            background-color: #ec5840;
+
+            transition: .4s ease-out;
+        }
+
+        .linearProgressBar .primaryText {
+            flex: 1;
+            line-height: 1;
+            margin-left: 10px;
+
+            font-size: 1.2rem;
+        }
+
+        .linearProgressBar .progressText {
+            line-height: 1;
+            margin-right: 10px;
+
+            font-size: 1.1rem;
         }
 
         @media screen and (max-width: 600px) {
@@ -238,9 +331,52 @@
         return held ? Math.floor(attended / held * 100) : 0;
     }
 
+    function getSubjectWiseAttendance() {
+        const attendance = loadStorage(STORAGE_KEYS.ATTENDANCE);
+
+        const subjectsAttendance = Object.values(attendance).reduce(
+            (accumulator, current) => {
+                for (const subject in current) {
+                    if (current[subject].held === 0) {
+                        continue;
+                    }
+                    if (!(subject in accumulator)) {
+                        accumulator[subject] = current[subject];
+                        continue;
+                    }
+
+                    accumulator[subject].held += current[subject].held;
+                    accumulator[subject].attended += current[subject].attended;
+                }
+                return accumulator;
+            },
+            {}
+        );
+
+        return subjectsAttendance;
+    }
+
     function showAttendanceReport() {
         const overallPercent = getOverallAttendancePercent();
         updateCircularProgressBar($("overallAttendanceProgressBar"), overallPercent);
+
+        const progressBars = {};
+        const subjectsAttendance = getSubjectWiseAttendance();
+
+        for (const subject in subjectsAttendance) {
+            progressBars[subject] = createLinearProgressBar(subject);
+        }
+
+        $("subjectReport").append(...Object.values(progressBars));
+
+        setTimeout(() => {
+            for (const subject in progressBars) {
+                const held = subjectsAttendance[subject].held;
+                const attended = subjectsAttendance[subject].attended;
+                const percent = Math.floor(attended / held * 100);
+                updateLinearProgressBar(progressBars[subject], percent);
+            }
+        }, 500);
     }
 
     function parseAttendanceTable(html) {
