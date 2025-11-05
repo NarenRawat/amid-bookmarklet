@@ -74,3 +74,16 @@ javascript:(async function () {const pageUrl = "https://online.uktech.ac.in/ums/
     - If prompted, open your attendance manually once.
     - Then run the bookmarklet again to finish setup.
 4. You'll see your **attendance report** appear right on the page!.
+
+---
+
+# Clearing and Resetting the Bookmarklet
+
+- **Clear Cache**
+    - Removes your previously synced attendance data.
+    - Use this if you want the bookmarklet to fetch attendance again for past months.
+
+- **Reset Bookmarklet**
+
+    - Removes all saved student details and attendance data.
+    - Use this if you want to set up the bookmarklet from the start again (for example, new semester).
