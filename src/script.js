@@ -63,15 +63,22 @@
                 </linearGradient>
             </defs>
         </svg>
+        <div class="flexCenter" id="overallAttendance">
+            <div id="overallAttendanceLabel">Overall</div>
+        </div>
         `;
 
         const container = document.createElement("div");
         container.id = "amid-container";
         container.innerHTML = HTMLContent;
+        container.classList.add("flexCenter");
 
-        const overallProgressBar = createCircularProgressBar();
-        overallProgressBar.id = "overallAttendanceProgressBar"
-        container.appendChild(overallProgressBar);
+        const overallAttendanceDiv = container.querySelector("#overallAttendance");
+        const overallAttendanceProgressBar = createCircularProgressBar();
+        overallAttendanceProgressBar.id = "overallAttendanceProgressBar"
+        overallAttendanceDiv.insertAdjacentElement("afterbegin", overallAttendanceProgressBar);
+
+        container.appendChild(overallAttendanceDiv);
 
         document.getElementById("PrintDiv").before(container);
     }
@@ -79,20 +86,22 @@
     function injectCSS() {
         const CSSContent = `
         #amid-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
             border-radius: 20px;
             margin: 5%;
             padding: 2%;
         }
 
+        .flexCenter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .circularProgressBar {
-            width: 300px;
             aspect-ratio: 1;
             position: relative;
+            flex: 0 0 300px;
         }
 
         .circularProgressBar .text {
@@ -103,7 +112,7 @@
             font-size: 3rem;
             font-weight: bold;
         }
-
+        
         .circularProgressBar svg {
             width: 100%;
             height: 100%;
@@ -111,18 +120,28 @@
             transform: rotate(-90deg);
         }
 
-        .circularProgressBar .progress {
+        .circularProgressBar svg circle {
             fill: none;
-            stroke: url("#gradient");
             stroke-width: 10;
+        }
 
+        .circularProgressBar .progress {
+            stroke: url("#gradient");
             transition: stroke-dashoffset 400ms cubic-bezier(.22, .9, .37, 1);
         }
 
         .circularProgressBar .track {
-            fill: none;
             stroke: #00000033;
-            stroke-width: 10;
+        }
+
+        #overallAttendance {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #overallAttendanceLabel {
+            font-size: 1.5rem;
+            font-weight: bold;
         }
         `;
 
