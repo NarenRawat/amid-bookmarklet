@@ -69,7 +69,11 @@
     function injectHTML() {
         const HTMLContent = `
         <div class="heading">Semester Attendance Report</div>
-        <div class="subject"></div>
+        <div class="subjectReport"></div>
+        <div class="actionButtons flexCenter">
+            <div id="clearCacheBtn" class="textButton flexCenter">Clear Cache</div>
+            <div id="resetBtn" class="textButton flexCenter">Reset Bookmarklet</div>
+        </div>
         `;
 
         const container = document.createElement("div");
@@ -79,7 +83,17 @@
 
         const overallAttendanceProgressBar = createCircularProgressBar("Overall");
         overallAttendanceProgressBar.id = "overallAttendanceProgressBar"
-        container.appendChild(overallAttendanceProgressBar);
+        const headingDiv = container.getElementsByClassName("heading")[0];
+        headingDiv.insertAdjacentElement("afterend", overallAttendanceProgressBar);
+
+        container.querySelector("#resetBtn").addEventListener("click", () => {
+            localStorage.clear();
+            window.location.reload();
+        });
+        container.querySelector("#clearCacheBtn").addEventListener("click", () => {
+            localStorage.removeItem(STORAGE_KEYS.ATTENDANCE);
+            window.location.reload();
+        });
 
         document.getElementById("PrintDiv").before(container);
     }
@@ -90,8 +104,9 @@
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
             border-radius: 20px;
             margin: 5%;
-            padding: 1%;
+            padding: 20px;
             flex-wrap: wrap;
+            gap: 20px;
         }
 
         .heading {
@@ -155,6 +170,33 @@
 
         .circularProgressBar .track {
             stroke: #00000033;
+        }
+
+        .actionButtons {
+            flex: 100%;
+            gap: 20px 30px;
+            flex-wrap: wrap;
+        }
+
+        .textButton {
+            flex: 1 1 200px;
+            max-width: 400px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #8CBDF2;
+            color: #0a2e52;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            -webkit-user-select: none;
+            transition: .2s ease;
+        }
+
+        .textButton:active {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(1px);
         }
 
         @media screen and (max-width: 600px) {
