@@ -21,7 +21,7 @@
         return container;
     }
 
-    function updateLinearProgressBar(progressBarContainer, percent) {
+    function updateLinearProgressBar(progressBarContainer, percent, attended, held) {
         const progress = progressBarContainer.getElementsByClassName("progress")[0];
         progress.style.transform = `translateX(-${100 - percent}%)`;
 
@@ -34,7 +34,7 @@
         }
 
         const progressTextDiv = progressBarContainer.getElementsByClassName("progressText")[0];
-        progressTextDiv.innerText = percent + "%";
+        progressTextDiv.innerText =  `${attended}/${held} (${percent}%)`;
     }
 
     ///////////////////////////////////////////
@@ -366,7 +366,7 @@
         const subjectsAttendance = getSubjectWiseAttendance();
 
         for (const subject in subjectsAttendance) {
-            progressBars[subject] = createLinearProgressBar(subject);
+            progressBars[subject] = createLinearProgressBar(subject.replace(/ ?\[\w+\]/, ""));
         }
 
         $("subjectReport").append(...Object.values(progressBars));
@@ -376,7 +376,7 @@
                 const held = subjectsAttendance[subject].held;
                 const attended = subjectsAttendance[subject].attended;
                 const percent = Math.floor(attended / held * 100);
-                updateLinearProgressBar(progressBars[subject], percent);
+                updateLinearProgressBar(progressBars[subject], percent, attended, held);
             }
         }, 500);
     }
