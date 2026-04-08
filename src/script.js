@@ -25,9 +25,9 @@
         const progress = progressBarContainer.getElementsByClassName("progress")[0];
         progress.style.transform = `translateX(-${100 - percent}%)`;
 
-        if (percent < 75) {
+        if (percent < 60) {
             progress.style.backgroundColor = "#ec5840";
-        } else if (percent < 80) {
+        } else if (percent < 75) {
             progress.style.backgroundColor = "#ffae00";
         } else {
             progress.style.backgroundColor = "#3adb76"
@@ -75,9 +75,9 @@
 
         progress.style.strokeDashoffset = circumference * (1 - percent / 100);
 
-        if (percent < 75) {
+        if (percent < 60) {
             progress.style.stroke = "#ec5840";
-        } else if (percent < 80) {
+        } else if (percent < 75) {
             progress.style.stroke = "#ffae00";
         } else {
             progress.style.stroke = "#3adb76"
